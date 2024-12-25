@@ -1,0 +1,6 @@
+@echo off
+echo 正在检查并关闭旧服务器...
+taskkill /F /IM node.exe
+
+echo 正在启动新服务器...
+start.bat 

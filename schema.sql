@@ -1,0 +1,9 @@
+CREATE TABLE certificates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    gender VARCHAR(10) NOT NULL,
+    id_type VARCHAR(20) NOT NULL,
+    id_number VARCHAR(50) NOT NULL UNIQUE,
+    cert_number VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+); 

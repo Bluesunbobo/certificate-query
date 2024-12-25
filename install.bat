@@ -1,0 +1,9 @@
+@echo off
+echo 正在安装 cnpm...
+call npm install -g cnpm --registry=https://registry.npmmirror.com
+echo 正在初始化项目...
+call cnpm init -y
+echo 正在安装依赖...
+call cnpm install express
+echo 安装完成！
+pause 

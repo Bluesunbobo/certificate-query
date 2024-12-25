@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>证书查询系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="search-box">
+            <h1>证书查询系统</h1>
+            <div class="search-form">
+                <input type="text" id="certificateId" placeholder="请输入证件号码">
+                <button onclick="searchCertificate()">查询</button>
+            </div>
+            
+            <div id="result" class="result-box" style="display: none;">
+                <h2>查询结果</h2>
+                <table>
+                    <tr>
+                        <th>姓名</th>
+                        <td id="name"></td>
+                    </tr>
+                    <tr>
+                        <th>性别</th>
+                        <td id="gender"></td>
+                    </tr>
+                    <tr>
+                        <th>证件类型</th>
+                        <td id="idType"></td>
+                    </tr>
+                    <tr>
+                        <th>证件号码</th>
+                        <td id="idNumber"></td>
+                    </tr>
+                    <tr>
+                        <th>证书编号</th>
+                        <td id="certNumber"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="upload-box">
+            <h2>数据上传</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+                <button type="submit">上传Excel文件</button>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
