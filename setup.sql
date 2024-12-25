@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS certificate_db;
-USE certificate_db;
+USE railway;
 
 -- 删除旧表（如果存在）
 DROP TABLE IF EXISTS certificates;
