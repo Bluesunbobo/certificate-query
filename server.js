@@ -7,11 +7,11 @@ const app = express();
 
 // 数据库配置
 const dbConfig = {
-    host: '127.0.0.1',
+    host: 'junction.proxy.rlwy.net',
     user: 'root',
-    password: '123456',
-    database: 'certificate_db',
-    port: 3306,
+    password: 'ubjHNdavXgwVkCDMlSNOYeMpALhtcetx',
+    database: 'railway',
+    port: 36581,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
