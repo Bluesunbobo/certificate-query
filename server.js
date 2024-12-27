@@ -41,11 +41,11 @@ if (!fs.existsSync('uploads')) {
 }
 
 // 设置静态文件目录
-app.use(express.static('public'));
+app.use(express.static(__dirname + '/public'));
 
 // 根路由
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(__dirname + '/public/index.html');
 });
 
 // 证书查询API
@@ -129,7 +129,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
         connection.release();
 
-        // 删除上传的���件
+        // 删除上传的文件
         fs.unlinkSync(req.file.path);
 
         res.json({ success: true, message: '文件上传成功' });
