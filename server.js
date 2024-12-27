@@ -23,6 +23,33 @@ const dbConfig = {
 // 创建数据库连接池
 const pool = mysql.createPool(dbConfig);
 
+// 自动创建表
+async function initDatabase() {
+    try {
+        const connection = await pool.getConnection();
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS certificates (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                gender VARCHAR(10) NOT NULL,
+                id_type VARCHAR(20) NOT NULL,
+                id_number VARCHAR(50) NOT NULL,
+                cert_number VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_id_number (id_number),
+                INDEX idx_cert_number (cert_number)
+            )
+        `);
+        connection.release();
+        console.log('Database initialized');
+    } catch (error) {
+        console.error('Database initialization error:', error);
+    }
+}
+
+// 在启动服务器前调用
+initDatabase();
+
 // 设置文件上传
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
