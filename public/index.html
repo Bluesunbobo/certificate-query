@@ -5,14 +5,185 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>证书查询系统</title>
     <style>
-        /* 现有样式保持不变 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .header {
+            background-color: #1890ff;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .warning-notice {
+            color: #ff4d4f;
+            font-size: 14px;
+            margin-top: 5px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .search-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .search-title {
+            color: #1890ff;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .search-button {
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .search-button:hover {
+            background-color: #40a9ff;
+        }
+        .result-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .result-title {
+            color: #1890ff;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .result-table th, .result-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .result-table th {
+            background-color: #fafafa;
+            font-weight: 600;
+        }
+        .result-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        .upload-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .upload-title {
+            color: #1890ff;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .upload-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .file-input {
+            flex: 1;
+        }
+        .upload-button {
+            background-color: #52c41a;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .upload-button:hover {
+            background-color: #73d13d;
+        }
+        .notice {
+            margin-top: 10px;
+            color: #666;
+            font-size: 12px;
+        }
         .alert {
             padding: 15px;
             margin: 15px 0;
             border-radius: 4px;
             display: none;
         }
-        /* ... 其他样式 ... */
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .result-divider {
+            height: 20px;
+            border-bottom: 1px solid #e8e8e8;
+            margin-bottom: 20px;
+        }
+        .multiple-results-notice {
+            color: #1890ff;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .result-table {
+            margin-bottom: 20px;
+        }
+        #resultList {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .result-table td {
+            vertical-align: top;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -20,6 +191,130 @@
         <h1>证书查询系统</h1>
         <div class="warning-notice">个人爱好免费开发，仅供内部使用，请勿外传</div>
     </div>
-    <!-- ... 其他 HTML 内容 ... -->
+
+    <div class="container">
+        <div class="search-box">
+            <div class="search-title">证书信息查询</div>
+            <div class="search-form">
+                <input type="text" id="certificateId" class="search-input" placeholder="请输入证件号码">
+                <button onclick="searchCertificate()" class="search-button">查询</button>
+            </div>
+        </div>
+
+        <div id="result" class="result-box">
+            <div class="result-title">查询结果</div>
+            <table class="result-table">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>证件类型</th>
+                        <th>证件号码</th>
+                        <th>证书编号</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="upload-box">
+            <div class="upload-title">证书数据导入</div>
+            <div id="uploadAlert" class="alert"></div>
+            <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+                <input type="file" id="excelFile" class="file-input" accept=".xlsx, .xls" required>
+                <button type="submit" class="upload-button">上传文件</button>
+            </form>
+            <div class="notice">
+                注意：请上传包含以下字段的Excel文件：姓名、性别、证件类型、证件号、证书编号
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, isSuccess) {
+            const alert = document.getElementById('uploadAlert');
+            alert.textContent = message;
+            alert.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
+            alert.style.display = 'block';
+            
+            // 3秒后自动隐藏提示
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
+
+        function searchCertificate() {
+            const searchValue = document.getElementById('certificateId').value;
+            if (!searchValue) {
+                showAlert('请输入证件号码', false);
+                return;
+            }
+
+            fetch(`/api/search?q=${encodeURIComponent(searchValue)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const result = document.getElementById('result');
+                    const resultBody = document.getElementById('resultBody');
+                    
+                    if (data.success) {
+                        // 清空之前的结果
+                        resultBody.innerHTML = '';
+                        
+                        // 显示所有结果
+                        data.data.forEach(item => {
+                            resultBody.innerHTML += `
+                                <tr>
+                                    <td>${item.name}</td>
+                                    <td>${item.gender}</td>
+                                    <td>${item.idType}</td>
+                                    <td>${item.idNumber}</td>
+                                    <td>${item.certNumbers.join('<br>')}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        result.style.display = 'block';
+                    } else {
+                        showAlert('未找���相关证书信息', false);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('查询失败，请稍后重试', false);
+                });
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('excelFile');
+            
+            if (!fileInput.files[0]) {
+                showAlert('请选择要上传的Excel文件', false);
+                return;
+            }
+
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('文件上传成功！', true);
+                    fileInput.value = '';
+                } else {
+                    showAlert('文件上传失败：' + data.message, false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('上传失败，请稍后重试', false);
+            });
+        });
+    </script>
 </body>
-</html>
+</html> 
