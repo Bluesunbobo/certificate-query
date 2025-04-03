@@ -7,17 +7,24 @@ const xlsx = require('xlsx');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const app = express();
+const fs = require('fs');
+const os = require('os');
 
 // 数据库配置
 const dbConfig = {
-    host: 'junction.proxy.rlwy.net',
-    user: 'root',
-    password: 'ubjHNdavXgwVkCDMlSNOYeMpALhtcetx',
-    database: 'railway',
-    port: 36581,
+    host: process.env.DB_HOST || 'junction.proxy.rlwy.net',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'ubjHNdavXgwVkCDMlSNOYeMpALhtcetx',
+    database: process.env.DB_NAME || 'railway',
+    port: process.env.DB_PORT || 36581,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 60000, // 连接超时时间增加到60秒
+    acquireTimeout: 60000, // 获取连接超时时间增加到60秒
+    timeout: 60000, // 查询超时时间增加到60秒
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000 // 10秒后开始保持连接
 };
 
 // 创建数据库连接池
@@ -50,22 +57,34 @@ async function initDatabase() {
 // 在启动服务器前调用
 initDatabase();
 
+// 使用系统临时目录作为上传目录
+let uploadDir = process.env.UPLOAD_DIR || path.join(os.tmpdir(), 'cert-uploads');
+
+// 确保上传目录存在
+try {
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    console.log(`Upload directory set to: ${uploadDir}`);
+} catch (error) {
+    console.error(`Failed to create upload directory: ${error.message}`);
+    // 降级使用当前目录
+    uploadDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+}
+
 // 设置文件上传
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/')
+        cb(null, uploadDir)
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '-' + file.originalname)
     }
 });
 const upload = multer({ storage: storage });
-
-// 确保上传目录存在
-const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
 
 // 设置静态文件目录
 app.use(express.static(__dirname + '/public'));
@@ -145,24 +164,73 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
         const worksheet = workbook.Sheets[sheetName];
         const data = xlsx.utils.sheet_to_json(worksheet);
 
-        const connection = await pool.getConnection();
-        
-        for (const row of data) {
-            await connection.execute(
-                'INSERT INTO certificates (name, gender, id_type, id_number, cert_number) VALUES (?, ?, ?, ?, ?)',
-                [row.姓名, row.性别, row.证件类型, row.证件号, row.证书编号]
-            );
+        // 检查数据是否为空
+        if (!data || data.length === 0) {
+            return res.json({ success: false, message: '文件中没有有效数据' });
         }
 
-        connection.release();
+        // 验证数据格式
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row.姓名 || !row.性别 || !row.证件类型 || !row.证件号 || !row.证书编号) {
+                return res.json({ 
+                    success: false, 
+                    message: `第${i+1}行数据不完整，请确保Excel包含姓名、性别、证件类型、证件号和证书编号字段` 
+                });
+            }
+        }
 
-        // 删除上传的文件
-        fs.unlinkSync(req.file.path);
-
-        res.json({ success: true, message: '文件上传成功' });
+        // 创建连接并开始事务
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            
+            // 批量操作，每50条数据一批
+            const batchSize = 50;
+            for (let i = 0; i < data.length; i += batchSize) {
+                const batch = data.slice(i, i + batchSize);
+                
+                // 准备批量插入数据
+                const values = batch.map(row => [
+                    row.姓名, row.性别, row.证件类型, row.证件号, row.证书编号
+                ]);
+                
+                // 执行批量插入
+                await connection.query(
+                    'INSERT INTO certificates (name, gender, id_type, id_number, cert_number) VALUES ?',
+                    [values]
+                );
+            }
+            
+            // 提交事务
+            await connection.commit();
+            
+            // 删除上传的文件
+            fs.unlinkSync(req.file.path);
+            
+            return res.json({ success: true, message: `文件上传成功，共导入${data.length}条记录` });
+        } catch (error) {
+            // 回滚事务
+            await connection.rollback();
+            console.error('Database error during file upload:', error);
+            return res.json({ 
+                success: false, 
+                message: `文件处理失败: ${error.message}` 
+            });
+        } finally {
+            // 确保连接被释放
+            connection.release();
+        }
     } catch (error) {
         console.error('Error processing file:', error);
-        res.json({ success: false, message: '文件处理失败：' + error.message });
+        // 确保临时文件被删除
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+            try { fs.unlinkSync(req.file.path); } catch (e) { /* 忽略删除错误 */ }
+        }
+        return res.json({ 
+            success: false, 
+            message: `文件处理失败: ${error.message}` 
+        });
     }
 });
 
