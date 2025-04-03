@@ -487,10 +487,149 @@ app.get('/api/test-network', async (req, res) => {
     res.json(results);
 });
 
+// 添加手动触发清理的API（需要管理员密码）
+app.get('/api/cleanup', async (req, res) => {
+    // 检查管理员密码
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const providedPassword = req.query.password;
+    
+    if (!adminPassword || providedPassword !== adminPassword) {
+        return res.status(403).json({ success: false, message: '未授权访问' });
+    }
+    
+    try {
+        await cleanupOldData();
+        res.json({ success: true, message: '清理操作已执行' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: '清理操作失败: ' + error.message });
+    }
+});
+
+// 添加数据库使用统计API
+app.get('/api/stats', async (req, res) => {
+    // 需要管理员密码
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const providedPassword = req.query.password;
+    
+    if (!adminPassword || providedPassword !== adminPassword) {
+        return res.status(403).json({ success: false, message: '未授权访问' });
+    }
+    
+    if (!databaseAvailable) {
+        return res.json({
+            success: false,
+            message: '数据库服务暂时不可用'
+        });
+    }
+    
+    try {
+        const client = await getConnection();
+        try {
+            // 获取总记录数
+            const countResult = await client.query('SELECT COUNT(*) as total FROM certificates');
+            
+            // 获取最早记录时间
+            const oldestResult = await client.query('SELECT MIN(created_at) as oldest FROM certificates');
+            
+            // 获取最新记录时间
+            const newestResult = await client.query('SELECT MAX(created_at) as newest FROM certificates');
+            
+            // 统计过去3个月的记录数
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            const recentResult = await client.query(
+                'SELECT COUNT(*) as recent FROM certificates WHERE created_at > $1',
+                [threeMonthsAgo.toISOString()]
+            );
+            
+            // 统计可能被清理的记录数
+            const cleanupResult = await client.query(
+                'SELECT COUNT(*) as cleanup_count FROM certificates WHERE created_at < $1',
+                [threeMonthsAgo.toISOString()]
+            );
+            
+            res.json({
+                success: true,
+                stats: {
+                    totalRecords: parseInt(countResult.rows[0].total),
+                    oldestRecord: oldestResult.rows[0].oldest,
+                    newestRecord: newestResult.rows[0].newest,
+                    recentRecords: parseInt(recentResult.rows[0].recent),
+                    recordsToCleanup: parseInt(cleanupResult.rows[0].cleanup_count)
+                }
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('获取统计信息时出错:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: '获取统计信息失败: ' + error.message 
+        });
+    }
+});
+
+// 添加定期清理功能
+async function cleanupOldData() {
+    if (!databaseAvailable) {
+        console.log('数据库不可用，跳过清理');
+        return;
+    }
+    
+    try {
+        const client = await getConnection();
+        
+        try {
+            // 计算3个月前的日期
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            const dateStr = threeMonthsAgo.toISOString();
+            
+            // 删除3个月前的数据
+            const result = await client.query(
+                'DELETE FROM certificates WHERE created_at < $1 RETURNING COUNT(*)',
+                [dateStr]
+            );
+            
+            console.log(`清理完成: 删除了 ${result.rowCount} 条过期记录`);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('清理数据时出错:', error);
+    }
+}
+
+// 设置定期清理任务(每天检查一次)
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
+let cleanupTimer = null;
+
+function scheduleCleanupTask() {
+    // 清除之前的定时器（如果有）
+    if (cleanupTimer) {
+        clearInterval(cleanupTimer);
+    }
+    
+    // 设置新的定时器
+    cleanupTimer = setInterval(() => {
+        console.log('执行定期数据清理...');
+        cleanupOldData();
+    }, CLEANUP_INTERVAL);
+    
+    console.log('数据清理任务已设置，间隔:', CLEANUP_INTERVAL, 'ms');
+}
+
 // 启动服务器
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
     console.log(`服务器已启动，请在浏览器中访问: http://localhost:${PORT}`);
+    
+    // 如果启用自动清理，初始化清理任务
+    if (process.env.ENABLE_AUTO_CLEANUP === 'true') {
+        console.log('启用自动数据清理');
+        scheduleCleanupTask();
+    }
 });
 
 // 处理进程退出信号
