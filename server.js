@@ -12,43 +12,47 @@ const os = require('os');
 
 // 数据库配置
 const dbConfig = {
-    host: process.env.DB_HOST || 'junction.proxy.rlwy.net',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'ubjHNdavXgwVkCDMlSNOYeMpALhtcetx',
-    database: process.env.DB_NAME || 'railway',
-    port: process.env.DB_PORT || 36581,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 5,  // 减少连接数
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000
 };
 
+// 打印数据库连接信息（不包含密码）
+console.log(`数据库连接配置: ${dbConfig.host}:${dbConfig.port}, 用户: ${dbConfig.user}, 数据库: ${dbConfig.database}`);
+
 // 创建连接池
 let pool;
-try {
-    pool = mysql.createPool(dbConfig);
-    // 添加连接池错误处理
-    pool.on('error', (err) => {
-        console.error('Database pool error:', err);
-        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            console.log('Attempting to reconnect to database...');
-            // 尝试重新初始化连接池
-            initDatabase();
-        }
-    });
-} catch (error) {
-    console.error('Failed to create database pool:', error);
-}
+let databaseAvailable = false;
+
+// 重试计数器和最大重试次数
+let retryCount = 0;
+const MAX_RETRIES = 5;
 
 // 自动创建表
 async function initDatabase() {
     try {
-        if (!pool) {
-            console.log('Recreating database pool...');
-            pool = mysql.createPool(dbConfig);
+        if (retryCount >= MAX_RETRIES) {
+            console.error(`已达到最大重试次数(${MAX_RETRIES})，停止尝试连接数据库。`);
+            console.log('应用将继续运行，但数据库功能可能不可用。');
+            databaseAvailable = false;
+            return;
         }
         
+        if (!pool) {
+            pool = createPool();
+            if (!pool) {
+                throw new Error('无法创建数据库连接池');
+            }
+        }
+        
+        console.log('尝试连接数据库...');
         const connection = await pool.getConnection();
         console.log('Database connection established successfully');
         
@@ -67,18 +71,33 @@ async function initDatabase() {
         `);
         connection.release();
         console.log('Database initialized');
+        
+        // 设置数据库可用标志
+        databaseAvailable = true;
+        
+        // 重置重试计数
+        retryCount = 0;
     } catch (error) {
-        console.error('Database initialization error:', error);
-        // 添加延迟重试
-        console.log('Will retry database initialization in 5 seconds...');
+        databaseAvailable = false;
+        retryCount++;
+        console.error(`Database initialization error (尝试 ${retryCount}/${MAX_RETRIES}): ${error.message}`);
+        
+        // 计算指数退避时间 (1秒, 2秒, 4秒, 8秒, 16秒)
+        const backoffTime = Math.min(1000 * Math.pow(2, retryCount - 1), 30000);
+        
+        console.log(`Will retry database initialization in ${backoffTime/1000} seconds...`);
         setTimeout(() => {
             initDatabase();
-        }, 5000);
+        }, backoffTime);
     }
 }
 
 // 在启动服务器前调用
-initDatabase();
+if (process.env.SKIP_DB !== 'true') {
+    initDatabase();
+} else {
+    console.log('跳过数据库初始化 (SKIP_DB=true)');
+}
 
 // 使用系统临时目录作为上传目录
 let uploadDir = process.env.UPLOAD_DIR || path.join(os.tmpdir(), 'cert-uploads');
@@ -137,8 +156,24 @@ async function getConnection() {
     }
 }
 
+// 添加服务状态端点
+app.get('/api/status', (req, res) => {
+    res.json({
+        status: 'running',
+        databaseAvailable: databaseAvailable,
+        time: new Date().toISOString()
+    });
+});
+
 // 证书查询API
 app.get('/api/search', async (req, res) => {
+    if (!databaseAvailable) {
+        return res.json({
+            success: false,
+            message: '数据库服务暂时不可用，请稍后重试'
+        });
+    }
+    
     const query = req.query.q;
     try {
         // 使用辅助函数获取连接
@@ -202,6 +237,13 @@ app.get('/api/search', async (req, res) => {
 
 // 文件上传API
 app.post('/api/upload', upload.single('file'), async (req, res) => {
+    if (!databaseAvailable) {
+        return res.json({
+            success: false,
+            message: '数据库服务暂时不可用，无法上传文件'
+        });
+    }
+    
     try {
         if (!req.file) {
             return res.json({ success: false, message: '未收到文件' });
@@ -316,4 +358,30 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
     console.error('未处理的Promise拒绝:', reason);
     // 记录错误但不退出进程
-}); 
+});
+
+// 创建数据库连接池的函数
+function createPool() {
+    try {
+        console.log('Creating database connection pool...');
+        const newPool = mysql.createPool(dbConfig);
+        
+        // 添加连接池错误处理
+        newPool.on('error', (err) => {
+            console.error('Database pool error:', err);
+            if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+                console.log('Connection lost to database, will attempt to reconnect...');
+                databaseAvailable = false;
+                // 延迟重新初始化
+                setTimeout(() => {
+                    initDatabase();
+                }, 5000);
+            }
+        });
+        
+        return newPool;
+    } catch (error) {
+        console.error('Failed to create database pool:', error);
+        return null;
+    }
+} 
