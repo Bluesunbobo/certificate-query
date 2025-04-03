@@ -20,20 +20,38 @@ const dbConfig = {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 60000, // 连接超时时间增加到60秒
-    acquireTimeout: 60000, // 获取连接超时时间增加到60秒
-    timeout: 60000, // 查询超时时间增加到60秒
     enableKeepAlive: true,
-    keepAliveInitialDelay: 10000 // 10秒后开始保持连接
+    keepAliveInitialDelay: 10000
 };
 
-// 创建数据库连接池
-const pool = mysql.createPool(dbConfig);
+// 创建连接池
+let pool;
+try {
+    pool = mysql.createPool(dbConfig);
+    // 添加连接池错误处理
+    pool.on('error', (err) => {
+        console.error('Database pool error:', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            console.log('Attempting to reconnect to database...');
+            // 尝试重新初始化连接池
+            initDatabase();
+        }
+    });
+} catch (error) {
+    console.error('Failed to create database pool:', error);
+}
 
 // 自动创建表
 async function initDatabase() {
     try {
+        if (!pool) {
+            console.log('Recreating database pool...');
+            pool = mysql.createPool(dbConfig);
+        }
+        
         const connection = await pool.getConnection();
+        console.log('Database connection established successfully');
+        
         await connection.execute(`
             CREATE TABLE IF NOT EXISTS certificates (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,6 +69,11 @@ async function initDatabase() {
         console.log('Database initialized');
     } catch (error) {
         console.error('Database initialization error:', error);
+        // 添加延迟重试
+        console.log('Will retry database initialization in 5 seconds...');
+        setTimeout(() => {
+            initDatabase();
+        }, 5000);
     }
 }
 
@@ -94,54 +117,79 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+// 获取数据库连接的辅助函数
+async function getConnection() {
+    try {
+        if (!pool) {
+            console.log('Recreating database pool before getting connection...');
+            pool = mysql.createPool(dbConfig);
+        }
+        return await pool.getConnection();
+    } catch (error) {
+        console.error('Error getting database connection:', error);
+        // 如果是连接丢失错误，尝试重新创建连接池
+        if (error.code === 'PROTOCOL_CONNECTION_LOST' || error.code === 'ECONNREFUSED') {
+            console.log('Connection lost, recreating pool...');
+            pool = mysql.createPool(dbConfig);
+            return await pool.getConnection();
+        }
+        throw error;
+    }
+}
+
 // 证书查询API
 app.get('/api/search', async (req, res) => {
     const query = req.query.q;
     try {
-        const connection = await pool.getConnection();
-        const [rows] = await connection.execute(
-            'SELECT * FROM certificates WHERE id_number = ? OR cert_number = ?',
-            [query, query]
-        );
-        connection.release();
-
-        if (rows.length > 0) {
-            // 使用 Map 来合并重复记录
-            const uniqueRecords = new Map();
+        // 使用辅助函数获取连接
+        const connection = await getConnection();
+        try {
+            const [rows] = await connection.execute(
+                'SELECT * FROM certificates WHERE id_number = ? OR cert_number = ?',
+                [query, query]
+            );
             
-            rows.forEach(data => {
-                const key = `${data.name}-${data.id_number}`; // 使用姓名和证件号作为唯一标识
+            if (rows.length > 0) {
+                // 使用 Map 来合并重复记录
+                const uniqueRecords = new Map();
                 
-                if (uniqueRecords.has(key)) {
-                    // 如果记录已存在，将证书编号添加到数组中
-                    const record = uniqueRecords.get(key);
-                    if (!record.certNumbers.includes(data.cert_number)) {
-                        record.certNumbers.push(data.cert_number);
+                rows.forEach(data => {
+                    const key = `${data.name}-${data.id_number}`; // 使用姓名和证件号作为唯一标识
+                    
+                    if (uniqueRecords.has(key)) {
+                        // 如果记录已存在，将证书编号添加到数组中
+                        const record = uniqueRecords.get(key);
+                        if (!record.certNumbers.includes(data.cert_number)) {
+                            record.certNumbers.push(data.cert_number);
+                        }
+                    } else {
+                        // 如果是新记录，创建新的对象
+                        uniqueRecords.set(key, {
+                            name: data.name,
+                            gender: data.gender,
+                            idType: data.id_type,
+                            idNumber: data.id_number,
+                            certNumbers: [data.cert_number]
+                        });
                     }
-                } else {
-                    // 如果是新记录，创建新的对象
-                    uniqueRecords.set(key, {
-                        name: data.name,
-                        gender: data.gender,
-                        idType: data.id_type,
-                        idNumber: data.id_number,
-                        certNumbers: [data.cert_number]
-                    });
-                }
-            });
+                });
 
-            // 转换为数组
-            const results = Array.from(uniqueRecords.values());
-            
-            res.json({
-                success: true,
-                data: results
-            });
-        } else {
-            res.json({
-                success: false,
-                message: '未找到相关证书信息'
-            });
+                // 转换为数组
+                const results = Array.from(uniqueRecords.values());
+                
+                res.json({
+                    success: true,
+                    data: results
+                });
+            } else {
+                res.json({
+                    success: false,
+                    message: '未找到相关证书信息'
+                });
+            }
+        } finally {
+            // 确保连接一定会被释放
+            connection.release();
         }
     } catch (error) {
         console.error('Database error:', error);
@@ -180,8 +228,8 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
             }
         }
 
-        // 创建连接并开始事务
-        const connection = await pool.getConnection();
+        // 使用辅助函数获取连接
+        const connection = await getConnection();
         try {
             await connection.beginTransaction();
             
@@ -236,6 +284,36 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
 // 启动服务器
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`服务器已启动，请在浏览器中访问: http://localhost:${PORT}`);
+});
+
+// 处理进程退出信号
+process.on('SIGTERM', () => {
+    console.log('收到SIGTERM信号，正在优雅关闭服务...');
+    server.close(async () => {
+        console.log('HTTP服务已关闭');
+        // 尝试关闭数据库连接池
+        if (pool) {
+            try {
+                await pool.end();
+                console.log('数据库连接池已关闭');
+            } catch (error) {
+                console.error('关闭数据库连接池时出错:', error);
+            }
+        }
+        process.exit(0);
+    });
+});
+
+// 处理未捕获的异常
+process.on('uncaughtException', (error) => {
+    console.error('未捕获的异常:', error);
+    // 记录错误但不退出进程
+});
+
+// 处理未处理的Promise拒绝
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('未处理的Promise拒绝:', reason);
+    // 记录错误但不退出进程
 }); 
