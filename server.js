@@ -620,6 +620,28 @@ function scheduleCleanupTask() {
     console.log('数据清理任务已设置，间隔:', CLEANUP_INTERVAL, 'ms');
 }
 
+// 添加一个广告回调处理接口
+app.get('/api/ad-callback', (req, res) => {
+    const callbackData = req.query;
+    
+    // 记录回调数据
+    console.log('广告回调数据:', callbackData);
+    
+    // 返回成功响应
+    res.json({ success: true, message: '回调接收成功' });
+});
+
+// 添加一个POST方法的回调接口以支持不同的回调方式
+app.post('/api/ad-callback', express.json(), (req, res) => {
+    const callbackData = req.body;
+    
+    // 记录回调数据
+    console.log('广告回调数据(POST):', callbackData);
+    
+    // 返回成功响应
+    res.json({ success: true, message: '回调接收成功' });
+});
+
 // 启动服务器
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
