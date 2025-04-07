@@ -9,25 +9,27 @@
             margin: 0;
             padding: 0;
             font-family: "Microsoft YaHei", Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
+            background-color: #1a1a1a;
+            color: #ffffff;
         }
         .header {
-            background-color: #1890ff;
+            background-color: #2d2d2d;
             color: white;
             padding: 20px 0;
             text-align: center;
+            border-bottom: 1px solid #3a3a3a;
         }
         .header h1 {
             margin: 0;
             font-size: 24px;
+            font-weight: 500;
         }
         .warning-notice {
-            color: #ff4d4f;
+            color: #ff6b6b;
             font-size: 14px;
             margin-top: 5px;
-            font-weight: bold;
-            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            background-color: rgba(255, 107, 107, 0.1);
             padding: 5px 10px;
             border-radius: 4px;
             display: inline-block;
@@ -38,18 +40,19 @@
             padding: 0 20px;
         }
         .search-box {
-            background: white;
+            background: #2d2d2d;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             margin-bottom: 20px;
+            border: 1px solid #3a3a3a;
         }
         .search-title {
-            color: #1890ff;
+            color: #4a9eff;
             font-size: 18px;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 1px solid #e8e8e8;
+            border-bottom: 1px solid #3a3a3a;
         }
         .search-form {
             display: flex;
@@ -58,37 +61,44 @@
         }
         .search-input {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #d9d9d9;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #3a3a3a;
             border-radius: 4px;
             font-size: 14px;
+            color: #ffffff;
+        }
+        .search-input:focus {
+            border-color: #4a9eff;
+            outline: none;
         }
         .search-button {
-            background-color: #1890ff;
+            background-color: #4a9eff;
             color: white;
             border: none;
-            padding: 10px 25px;
+            padding: 12px 25px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s;
         }
         .search-button:hover {
-            background-color: #40a9ff;
+            background-color: #3a8eef;
         }
         .result-box {
-            background: white;
+            background: #2d2d2d;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             display: none;
+            border: 1px solid #3a3a3a;
         }
         .result-title {
-            color: #1890ff;
+            color: #4a9eff;
             font-size: 18px;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 1px solid #e8e8e8;
+            border-bottom: 1px solid #3a3a3a;
         }
         .result-table {
             width: 100%;
@@ -98,28 +108,30 @@
         .result-table th, .result-table td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #e8e8e8;
+            border-bottom: 1px solid #3a3a3a;
+            color: #ffffff;
         }
         .result-table th {
-            background-color: #fafafa;
-            font-weight: 600;
+            background-color: #232323;
+            font-weight: 500;
         }
         .result-table tbody tr:hover {
-            background-color: #f5f5f5;
+            background-color: #363636;
         }
         .upload-box {
-            background: white;
+            background: #2d2d2d;
             padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
             margin-top: 20px;
+            border: 1px solid #3a3a3a;
         }
         .upload-title {
-            color: #1890ff;
+            color: #4a9eff;
             font-size: 18px;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 1px solid #e8e8e8;
+            border-bottom: 1px solid #3a3a3a;
         }
         .upload-form {
             display: flex;
@@ -128,23 +140,24 @@
         }
         .file-input {
             flex: 1;
+            color: #ffffff;
         }
         .upload-button {
             background-color: #52c41a;
             color: white;
             border: none;
-            padding: 10px 25px;
+            padding: 12px 25px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s;
         }
         .upload-button:hover {
-            background-color: #73d13d;
+            background-color: #49b116;
         }
         .notice {
             margin-top: 10px;
-            color: #666;
+            color: #999;
             font-size: 12px;
         }
         .alert {
@@ -154,27 +167,24 @@
             display: none;
         }
         .alert-success {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
+            background-color: rgba(82, 196, 26, 0.1);
+            border: 1px solid #52c41a;
+            color: #52c41a;
         }
         .alert-error {
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
+            background-color: rgba(255, 77, 79, 0.1);
+            border: 1px solid #ff4d4f;
+            color: #ff4d4f;
         }
         .result-divider {
             height: 20px;
-            border-bottom: 1px solid #e8e8e8;
+            border-bottom: 1px solid #3a3a3a;
             margin-bottom: 20px;
         }
         .multiple-results-notice {
-            color: #1890ff;
+            color: #4a9eff;
             margin-bottom: 15px;
-            font-weight: bold;
-        }
-        .result-table {
-            margin-bottom: 20px;
+            font-weight: 500;
         }
         #resultList {
             max-height: 600px;
@@ -184,6 +194,31 @@
             vertical-align: top;
             line-height: 1.5;
         }
+        /* 广告容器样式 */
+        .ad-container {
+            width: 100%;
+            overflow: hidden;
+            text-align: center;
+            margin: 15px 0;
+            background-color: #2d2d2d;
+            padding: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4a4a;
+        }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9610987468954407"
      crossorigin="anonymous"></script>
@@ -192,6 +227,11 @@
     <div class="header">
         <h1>证书查询系统</h1>
         <div class="warning-notice">个人爱好免费开发，仅供内部使用，请勿外传</div>
+    </div>
+
+    <!-- 91淘金广告位1 - 顶部广告 -->
+    <div class="ad-container" style="text-align: center; margin: 15px 0;">
+        <script src="https://www.91taojin.com.cn/js/广告位ID.js"></script>
     </div>
 
     <div class="ad-container">
@@ -232,6 +272,11 @@
             </table>
         </div>
 
+        <!-- 91淘金广告位2 - 结果区域下方 -->
+        <div class="ad-container" style="text-align: center; margin: 15px 0;">
+            <script src="https://www.91taojin.com.cn/js/广告位ID2.js"></script>
+        </div>
+
         <div class="upload-box">
             <div class="upload-title">证书数据导入</div>
             <div id="uploadAlert" class="alert"></div>
@@ -242,6 +287,11 @@
             <div class="notice">
                 注意：请上传包含以下字段的Excel文件：姓名、性别、证件类型、证件号、证书编号
             </div>
+        </div>
+        
+        <!-- 91淘金广告位3 - 页面底部 -->
+        <div class="ad-container" style="text-align: center; margin: 20px 0;">
+            <script src="https://www.91taojin.com.cn/js/广告位ID3.js"></script>
         </div>
     </div>
 
@@ -331,4 +381,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
