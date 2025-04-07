@@ -4,381 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>证书查询系统</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: "Microsoft YaHei", Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
-        }
-        .header {
-            background-color: #2d2d2d;
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            border-bottom: 1px solid #3a3a3a;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 500;
-        }
-        .warning-notice {
-            color: #ff6b6b;
-            font-size: 14px;
-            margin-top: 5px;
-            font-weight: 500;
-            background-color: rgba(255, 107, 107, 0.1);
-            padding: 5px 10px;
-            border-radius: 4px;
-            display: inline-block;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-        .search-box {
-            background: #2d2d2d;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            border: 1px solid #3a3a3a;
-        }
-        .search-title {
-            color: #4a9eff;
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3a3a3a;
-        }
-        .search-form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .search-input {
-            flex: 1;
-            padding: 12px;
-            background: #1a1a1a;
-            border: 1px solid #3a3a3a;
-            border-radius: 4px;
-            font-size: 14px;
-            color: #ffffff;
-        }
-        .search-input:focus {
-            border-color: #4a9eff;
-            outline: none;
-        }
-        .search-button {
-            background-color: #4a9eff;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .search-button:hover {
-            background-color: #3a8eef;
-        }
-        .result-box {
-            background: #2d2d2d;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            display: none;
-            border: 1px solid #3a3a3a;
-        }
-        .result-title {
-            color: #4a9eff;
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3a3a3a;
-        }
-        .result-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .result-table th, .result-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #3a3a3a;
-            color: #ffffff;
-        }
-        .result-table th {
-            background-color: #232323;
-            font-weight: 500;
-        }
-        .result-table tbody tr:hover {
-            background-color: #363636;
-        }
-        .upload-box {
-            background: #2d2d2d;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            margin-top: 20px;
-            border: 1px solid #3a3a3a;
-        }
-        .upload-title {
-            color: #4a9eff;
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3a3a3a;
-        }
-        .upload-form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .file-input {
-            flex: 1;
-            color: #ffffff;
-        }
-        .upload-button {
-            background-color: #52c41a;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .upload-button:hover {
-            background-color: #49b116;
-        }
-        .notice {
-            margin-top: 10px;
-            color: #999;
-            font-size: 12px;
-        }
-        .alert {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-            display: none;
-        }
-        .alert-success {
-            background-color: rgba(82, 196, 26, 0.1);
-            border: 1px solid #52c41a;
-            color: #52c41a;
-        }
-        .alert-error {
-            background-color: rgba(255, 77, 79, 0.1);
-            border: 1px solid #ff4d4f;
-            color: #ff4d4f;
-        }
-        .result-divider {
-            height: 20px;
-            border-bottom: 1px solid #3a3a3a;
-            margin-bottom: 20px;
-        }
-        .multiple-results-notice {
-            color: #4a9eff;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        #resultList {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-        .result-table td {
-            vertical-align: top;
-            line-height: 1.5;
-        }
-        /* 广告容器样式 */
-        .ad-container {
-            width: 100%;
-            overflow: hidden;
-            text-align: center;
-            margin: 15px 0;
-            background-color: #2d2d2d;
-            padding: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #3a3a3a;
-        }
-        /* 滚动条样式 */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #3a3a3a;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4a4a4a;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9610987468954407"
      crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="header">
-        <h1>证书查询系统</h1>
-        <div class="warning-notice">个人爱好免费开发，仅供内部使用，请勿外传</div>
-    </div>
-
-    <!-- 91淘金广告位1 - 顶部广告 -->
-    <div class="ad-container" style="text-align: center; margin: 15px 0;">
-        <script src="https://www.91taojin.com.cn/js/广告位ID.js"></script>
-    </div>
-
-    <div class="ad-container">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-9610987468954407"
-             data-ad-slot="700388032"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
-    </div>
-
     <div class="container">
         <div class="search-box">
-            <div class="search-title">证书信息查询</div>
+            <h1>证书查询系统</h1>
             <div class="search-form">
-                <input type="text" id="certificateId" class="search-input" placeholder="请输入证件号码">
-                <button onclick="searchCertificate()" class="search-button">查询</button>
+                <input type="text" id="certificateId" placeholder="请输入证件号码">
+                <button onclick="searchCertificate()">查询</button>
             </div>
-        </div>
-
-        <div id="result" class="result-box">
-            <div class="result-title">查询结果</div>
-            <table class="result-table">
-                <thead>
+            
+            <div id="result" class="result-box" style="display: none;">
+                <h2>查询结果</h2>
+                <table>
                     <tr>
                         <th>姓名</th>
-                        <th>性别</th>
-                        <th>证件类型</th>
-                        <th>证件号码</th>
-                        <th>证书编号</th>
+                        <td id="name"></td>
                     </tr>
-                </thead>
-                <tbody id="resultBody">
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 91淘金广告位2 - 结果区域下方 -->
-        <div class="ad-container" style="text-align: center; margin: 15px 0;">
-            <script src="https://www.91taojin.com.cn/js/广告位ID2.js"></script>
+                    <tr>
+                        <th>性别</th>
+                        <td id="gender"></td>
+                    </tr>
+                    <tr>
+                        <th>证件类型</th>
+                        <td id="idType"></td>
+                    </tr>
+                    <tr>
+                        <th>证件号码</th>
+                        <td id="idNumber"></td>
+                    </tr>
+                    <tr>
+                        <th>证书编号</th>
+                        <td id="certNumber"></td>
+                    </tr>
+                </table>
+            </div>
         </div>
 
         <div class="upload-box">
-            <div class="upload-title">证书数据导入</div>
-            <div id="uploadAlert" class="alert"></div>
-            <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
-                <input type="file" id="excelFile" class="file-input" accept=".xlsx, .xls" required>
-                <button type="submit" class="upload-button">上传文件</button>
+            <h2>数据上传</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+                <button type="submit">上传Excel文件</button>
             </form>
-            <div class="notice">
-                注意：请上传包含以下字段的Excel文件：姓名、性别、证件类型、证件号、证书编号
-            </div>
-        </div>
-        
-        <!-- 91淘金广告位3 - 页面底部 -->
-        <div class="ad-container" style="text-align: center; margin: 20px 0;">
-            <script src="https://www.91taojin.com.cn/js/广告位ID3.js"></script>
         </div>
     </div>
-
-    <script>
-        function showAlert(message, isSuccess) {
-            const alert = document.getElementById('uploadAlert');
-            alert.textContent = message;
-            alert.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
-            alert.style.display = 'block';
-            
-            // 3秒后自动隐藏提示
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 3000);
-        }
-
-        function searchCertificate() {
-            const searchValue = document.getElementById('certificateId').value;
-            if (!searchValue) {
-                showAlert('请输入证件号码', false);
-                return;
-            }
-
-            fetch(`/api/search?q=${encodeURIComponent(searchValue)}`)
-                .then(response => response.json())
-                .then(data => {
-                    const result = document.getElementById('result');
-                    const resultBody = document.getElementById('resultBody');
-                    
-                    if (data.success) {
-                        // 清空之前的结果
-                        resultBody.innerHTML = '';
-                        
-                        // 显示所有结果
-                        data.data.forEach(item => {
-                            resultBody.innerHTML += `
-                                <tr>
-                                    <td>${item.name}</td>
-                                    <td>${item.gender}</td>
-                                    <td>${item.idType}</td>
-                                    <td>${item.idNumber}</td>
-                                    <td>${item.certNumbers.join('<br>')}</td>
-                                </tr>
-                            `;
-                        });
-                        
-                        result.style.display = 'block';
-                    } else {
-                        showAlert('未找到相关证书信息', false);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('查询失败，请稍后重试', false);
-                });
-        }
-
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData();
-            const fileInput = document.getElementById('excelFile');
-            
-            if (!fileInput.files[0]) {
-                showAlert('请选择要上传的Excel文件', false);
-                return;
-            }
-
-            formData.append('file', fileInput.files[0]);
-
-            fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('文件上传成功！', true);
-                    fileInput.value = '';
-                } else {
-                    showAlert('文件上传失败：' + data.message, false);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('上传失败，请稍后重试', false);
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
-</html>
+</html> 
