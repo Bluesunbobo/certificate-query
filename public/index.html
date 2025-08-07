@@ -331,8 +331,9 @@
         <!-- 主要查询功能 -->
         <div class="card">
             <div class="card-title">
-                🔍 证书信息查询
+                🔍 证书编号查询
             </div>
+            <div id="searchAlert" class="alert"></div>
             <div class="input-group">
                 <input type="text" id="certificateId" class="search-input" placeholder="请输入证件号码进行查询">
                 <button onclick="searchCertificate()" class="btn btn-primary">
@@ -407,7 +408,19 @@
     </div>
 
     <script>
-        function showAlert(message, isSuccess) {
+        function showSearchAlert(message, isSuccess) {
+            const alert = document.getElementById('searchAlert');
+            alert.textContent = message;
+            alert.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
+            alert.style.display = 'block';
+            
+            // 3秒后自动隐藏提示
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
+
+        function showUploadAlert(message, isSuccess) {
             const alert = document.getElementById('uploadAlert');
             alert.textContent = message;
             alert.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-error');
@@ -422,7 +435,7 @@
         function searchCertificate() {
             const searchValue = document.getElementById('certificateId').value;
             if (!searchValue) {
-                showAlert('请输入证件号码', false);
+                showSearchAlert('请输入证件号码', false);
                 return;
             }
 
@@ -438,37 +451,32 @@
                         
                         // 显示所有结果
                         data.data.forEach(item => {
-                            // 为每个证书编号创建查询链接，并模糊化显示
+                            // 为每个证书编号创建查询链接，显示完整信息
                             const certLinks = item.certNumbers.map(certNumber => {
-                                const queryUrl = `http://tcmps.cmea.org.cn/web/cert/jumpAbilityCert.html#${certNumber}`;
-                                return `<a href="${queryUrl}" target="_blank" class="cert-link" title="点击查询证书: ${certNumber}">🔍 查询证书</a>`;
+                                return `<button onclick="openCertQuery('${certNumber}')" class="cert-link">🔍 查询证书</button>`;
                             }).join('<br>');
-                            
-                            // 模糊化显示的证书编号
-                            const maskedCertNumbers = item.certNumbers.map(certNumber => 
-                                maskCertificateNumber(certNumber)
-                            ).join('<br>');
                             
                             resultBody.innerHTML += `
                                 <tr>
                                     <td>${item.name}</td>
                                     <td>${item.gender}</td>
                                     <td>${item.idType}</td>
-                                    <td>${maskIdNumber(item.idNumber)}</td>
-                                    <td>${maskedCertNumbers}</td>
+                                    <td>${item.idNumber}</td>
+                                    <td>${item.certNumbers.join('<br>')}</td>
                                     <td>${certLinks}</td>
                                 </tr>
                             `;
                         });
                         
                         result.style.display = 'block';
+                        showSearchAlert('查询成功', true);
                     } else {
-                        showAlert('未找到相关证书信息', false);
+                        showSearchAlert('未找到相关证书信息', false);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('查询失败，请稍后重试', false);
+                    showSearchAlert('查询失败，请稍后重试', false);
                 });
         }
 
@@ -476,7 +484,7 @@
         function openManualQuery() {
             const certNumber = document.getElementById('manualCertNumber').value.trim();
             if (!certNumber) {
-                showAlert('请输入证书编号', false);
+                showSearchAlert('请输入证书编号', false);
                 return;
             }
             
@@ -515,7 +523,7 @@
             const fileInput = document.getElementById('excelFile');
             
             if (!fileInput.files[0]) {
-                showAlert('请选择要上传的Excel文件', false);
+                showUploadAlert('请选择要上传的Excel文件', false);
                 return;
             }
 
@@ -528,15 +536,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showAlert('文件上传成功！', true);
+                    showUploadAlert('文件上传成功！', true);
                     fileInput.value = '';
                 } else {
-                    showAlert('文件上传失败：' + data.message, false);
+                    showUploadAlert('文件上传失败：' + data.message, false);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('上传失败，请稍后重试', false);
+                showUploadAlert('上传失败，请稍后重试', false);
             });
         });
     </script>
