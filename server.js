@@ -203,13 +203,13 @@ app.get('/api/search', async (req, res) => {
         // 当数据库不可用时，返回模拟数据用于测试
         return res.json({
             success: true,
-            data: {
+            data: [{
                 name: '测试用户',
                 gender: '男',
                 idType: '身份证',
                 idNumber: query || '123456789012345678',
-                certNumber: 'CERT' + Math.random().toString(36).substr(2, 8).toUpperCase()
-            }
+                certNumbers: ['CERT' + Math.random().toString(36).substr(2, 8).toUpperCase()]
+            }]
         });
     }
     try {
