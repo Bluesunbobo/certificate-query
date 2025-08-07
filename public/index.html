@@ -5,241 +5,366 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>证书查询系统</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: "Microsoft YaHei", Arial, sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            box-sizing: border-box;
         }
-        .header {
-            background-color: #2d2d2d;
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            border-bottom: 1px solid #3a3a3a;
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 500;
-        }
-        .warning-notice {
-            color: #ff6b6b;
-            font-size: 14px;
-            margin-top: 5px;
-            font-weight: 500;
-            background-color: rgba(255, 107, 107, 0.1);
-            padding: 5px 10px;
-            border-radius: 4px;
-            display: inline-block;
-        }
+        
         .container {
             max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .search-box {
-            background: #2d2d2d;
+        
+        /* iOS风格头部 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-            border: 1px solid #3a3a3a;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-        .search-title {
-            color: #4a9eff;
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3a3a3a;
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
         }
-        .search-form {
+        
+        .header-subtitle {
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        /* iOS风格卡片 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
             display: flex;
+            align-items: center;
             gap: 10px;
+        }
+        
+        /* iOS风格输入框 */
+        .input-group {
+            display: flex;
+            gap: 15px;
             margin-bottom: 20px;
         }
+        
         .search-input {
             flex: 1;
-            padding: 12px;
-            background: #1a1a1a;
-            border: 1px solid #3a3a3a;
-            border-radius: 4px;
-            font-size: 14px;
-            color: #ffffff;
-        }
-        .search-input:focus {
-            border-color: #4a9eff;
+            padding: 16px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
             outline: none;
         }
-        .search-button {
-            background-color: #4a9eff;
-            color: white;
+        
+        .search-input:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* iOS风格按钮 */
+        .btn {
+            padding: 16px 30px;
             border: none;
-            padding: 12px 25px;
-            border-radius: 4px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .search-button:hover {
-            background-color: #3a8eef;
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
         }
-        .result-box {
-            background: #2d2d2d;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            display: none;
-            border: 1px solid #3a3a3a;
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
-        .result-title {
-            color: #4a9eff;
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3a3a3a;
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
         }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(86, 171, 47, 0.3);
+        }
+        
+        /* 表格样式 */
         .result-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-        }
-        .result-table th, .result-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #3a3a3a;
-            color: #ffffff;
-        }
-        .result-table th {
-            background-color: #232323;
-            font-weight: 500;
-        }
-        .result-table tbody tr:hover {
-            background-color: #363636;
-        }
-        .upload-box {
-            background: #2d2d2d;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            margin-top: 20px;
-            border: 1px solid #3a3a3a;
-        }
-        .upload-title {
-            color: #4a9eff;
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3a3a3a;
-        }
-        .upload-form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .file-input {
-            flex: 1;
-            color: #ffffff;
-        }
-        .upload-button {
-            background-color: #52c41a;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .upload-button:hover {
-            background-color: #49b116;
-        }
-        .notice {
-            margin-top: 10px;
-            color: #999;
-            font-size: 12px;
-        }
-        .alert {
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-            display: none;
-        }
-        .alert-success {
-            background-color: rgba(82, 196, 26, 0.1);
-            border: 1px solid #52c41a;
-            color: #52c41a;
-        }
-        .alert-error {
-            background-color: rgba(255, 77, 79, 0.1);
-            border: 1px solid #ff4d4f;
-            color: #ff4d4f;
-        }
-        .result-divider {
-            height: 20px;
-            border-bottom: 1px solid #3a3a3a;
-            margin-bottom: 20px;
-        }
-        .multiple-results-notice {
-            color: #4a9eff;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        #resultList {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-        .result-table td {
-            vertical-align: top;
-            line-height: 1.5;
-        }
-        /* 广告容器样式 */
-        .ad-container {
-            width: 100%;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            text-align: center;
-            margin: 15px 0;
-            background-color: #2d2d2d;
-            padding: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #3a3a3a;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
         }
+        
+        .result-table th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .result-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e1e5e9;
+            color: #333;
+        }
+        
+        .result-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* 证书查询链接样式 */
+        .cert-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .cert-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* 手动查询区域 */
+        .manual-query {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .manual-query .card-title {
+            color: #d2691e;
+        }
+        
+        .manual-query .btn {
+            background: linear-gradient(135deg, #d2691e, #ff8c42);
+            color: white;
+        }
+        
+        .manual-query .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(210, 105, 30, 0.3);
+        }
+        
+        /* 功能说明卡片 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        /* 警告和提示样式 */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .card-title {
+                font-size: 20px;
+            }
+        }
+        
         /* 滚动条样式 */
         ::-webkit-scrollbar {
             width: 8px;
         }
+        
         ::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #3a3a3a;
+            background: #f1f1f1;
             border-radius: 4px;
         }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
         ::-webkit-scrollbar-thumb:hover {
-            background: #4a4a4a;
+            background: #5a6fd8;
         }
     </style>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9610987468954407"
-     crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="header">
-        <h1>证书查询系统</h1>
-        <div class="warning-notice">个人爱好免费开发，仅供内部使用，请勿外传</div>
-    </div>
-
     <div class="container">
-        <div class="search-box">
-            <div class="search-title">证书信息查询</div>
-            <div class="search-form">
-                <input type="text" id="certificateId" class="search-input" placeholder="请输入证件号码">
-                <button onclick="searchCertificate()" class="search-button">查询</button>
+        <!-- iOS风格头部 -->
+        <div class="header">
+            <h1>📋 证书查询系统</h1>
+            <p class="header-subtitle">安全、便捷的证书信息查询平台</p>
+            <div style="margin-top: 15px; padding: 10px 20px; background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 8px; color: #856404; font-size: 14px; font-weight: 500;">
+                ⚠️ 个人爱好免费开发，仅供内部使用，请勿外传
             </div>
         </div>
 
-        <div id="result" class="result-box">
-            <div class="result-title">查询结果</div>
+        <!-- 主要查询功能 -->
+        <div class="card">
+            <div class="card-title">
+                🔍 证书信息查询
+            </div>
+            <div class="input-group">
+                <input type="text" id="certificateId" class="search-input" placeholder="请输入证件号码进行查询">
+                <button onclick="searchCertificate()" class="btn btn-primary">
+                    🔍 查询
+                </button>
+            </div>
+        </div>
+
+        <!-- 手动查询功能 -->
+        <div class="manual-query">
+            <div class="card-title">
+                🌐 手动查询证书
+            </div>
+            <p style="margin-bottom: 20px; color: #d2691e;">
+                如果您知道证书编号，可以直接访问官方查询网站：
+            </p>
+            <div class="input-group">
+                <input type="text" id="manualCertNumber" class="search-input" placeholder="请输入证书编号（如：CMEA51106316680）">
+                <button onclick="openManualQuery()" class="btn">
+                    🌐 打开官方查询
+                </button>
+            </div>
+            <p style="margin-top: 15px; font-size: 14px; color: #d2691e;">
+                💡 提示：点击按钮将直接跳转到中国医药教育协会官方证书查询页面
+            </p>
+        </div>
+
+        <!-- 查询结果 -->
+        <div id="result" class="card" style="display: none;">
+            <div class="card-title">
+                📊 查询结果
+            </div>
             <table class="result-table">
                 <thead>
                     <tr>
@@ -248,6 +373,7 @@
                         <th>证件类型</th>
                         <th>证件号码</th>
                         <th>证书编号</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="resultBody">
@@ -255,16 +381,28 @@
             </table>
         </div>
 
-        <div class="upload-box">
-            <div class="upload-title">证书数据导入</div>
-            <div id="uploadAlert" class="alert"></div>
-            <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
-                <input type="file" id="excelFile" class="file-input" accept=".xlsx, .xls" required>
-                <button type="submit" class="upload-button">上传文件</button>
-            </form>
-            <div class="notice">
-                注意：请上传包含以下字段的Excel文件：姓名、性别、证件类型、证件号、证书编号
+        <!-- 数据导入功能 -->
+        <div class="card">
+            <div class="card-title">
+                📤 证书数据导入（培训承办单位上传）
             </div>
+            <div id="uploadAlert" class="alert"></div>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="input-group">
+                    <input type="file" id="excelFile" class="search-input" accept=".xlsx, .xls" required>
+                    <button type="submit" class="btn btn-success">
+                        📤 上传文件
+                    </button>
+                </div>
+            </form>
+            <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                📝 注意：请上传包含以下字段的Excel文件：姓名、性别、证件类型、证件号、证书编号
+            </p>
+        </div>
+
+        <!-- 底部提示信息 -->
+        <div style="text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 14px;">
+            <p>⚠️ 个人爱好免费开发，仅供内部使用，请勿外传</p>
         </div>
     </div>
 
@@ -300,13 +438,25 @@
                         
                         // 显示所有结果
                         data.data.forEach(item => {
+                            // 为每个证书编号创建查询链接，并模糊化显示
+                            const certLinks = item.certNumbers.map(certNumber => {
+                                const queryUrl = `http://tcmps.cmea.org.cn/web/cert/jumpAbilityCert.html#${certNumber}`;
+                                return `<a href="${queryUrl}" target="_blank" class="cert-link" title="点击查询证书: ${certNumber}">🔍 查询证书</a>`;
+                            }).join('<br>');
+                            
+                            // 模糊化显示的证书编号
+                            const maskedCertNumbers = item.certNumbers.map(certNumber => 
+                                maskCertificateNumber(certNumber)
+                            ).join('<br>');
+                            
                             resultBody.innerHTML += `
                                 <tr>
                                     <td>${item.name}</td>
                                     <td>${item.gender}</td>
                                     <td>${item.idType}</td>
-                                    <td>${item.idNumber}</td>
-                                    <td>${item.certNumbers.join('<br>')}</td>
+                                    <td>${maskIdNumber(item.idNumber)}</td>
+                                    <td>${maskedCertNumbers}</td>
+                                    <td>${certLinks}</td>
                                 </tr>
                             `;
                         });
@@ -322,6 +472,43 @@
                 });
         }
 
+        // 手动查询功能
+        function openManualQuery() {
+            const certNumber = document.getElementById('manualCertNumber').value.trim();
+            if (!certNumber) {
+                showAlert('请输入证书编号', false);
+                return;
+            }
+            
+            const queryUrl = `http://tcmps.cmea.org.cn/web/cert/jumpAbilityCert.html#${certNumber}`;
+            window.open(queryUrl, '_blank');
+        }
+
+        // 模糊化证书编号函数
+        function maskCertificateNumber(certNumber) {
+            if (!certNumber || certNumber.length < 8) {
+                return certNumber;
+            }
+            // 保留前4位和后4位，中间用*代替
+            const prefix = certNumber.substring(0, 4);
+            const suffix = certNumber.substring(certNumber.length - 4);
+            const middle = '*'.repeat(certNumber.length - 8);
+            return `${prefix}${middle}${suffix}`;
+        }
+
+        // 模糊化身份证号函数
+        function maskIdNumber(idNumber) {
+            if (!idNumber || idNumber.length < 10) {
+                return idNumber;
+            }
+            // 保留前3位和后4位，中间用*代替
+            const prefix = idNumber.substring(0, 3);
+            const suffix = idNumber.substring(idNumber.length - 4);
+            const middle = '*'.repeat(idNumber.length - 7);
+            return `${prefix}${middle}${suffix}`;
+        }
+
+        // 文件上传处理
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData();
