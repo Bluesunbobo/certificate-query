@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: certificate-query-system
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_TYPE
+        value: postgres
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_SSL
+        value: true
+      - key: ENABLE_AUTO_CLEANUP
+        value: true
+      - key: UPLOAD_DIR
+        value: /tmp/cert-uploads
