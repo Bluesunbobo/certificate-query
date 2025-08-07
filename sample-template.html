@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel文件格式说明</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #333;
+            margin: 20px 0 10px 0;
+        }
+
+        .warning-box {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .required {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .example-row {
+            background-color: #f8f9fa;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #1890ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .back-button:hover {
+            background-color: #40a9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Excel文件格式说明</h1>
+        
+        <div class="warning-box">
+            <strong>重要提示：</strong>请确保您的Excel文件包含以下必需的列，且数据格式正确。
+        </div>
+
+        <h2>必需的列结构</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>列名</th>
+                    <th>说明</th>
+                    <th>是否必需</th>
+                    <th>示例</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="required">姓名</td>
+                    <td>证书持有人的姓名</td>
+                    <td class="required">是</td>
+                    <td>张三</td>
+                </tr>
+                <tr>
+                    <td class="required">性别</td>
+                    <td>证书持有人的性别</td>
+                    <td class="required">是</td>
+                    <td>男/女</td>
+                </tr>
+                <tr>
+                    <td class="required">证件类型</td>
+                    <td>证件类型（如身份证、护照等）</td>
+                    <td class="required">是</td>
+                    <td>身份证</td>
+                </tr>
+                <tr>
+                    <td class="required">证件号</td>
+                    <td>证件号码</td>
+                    <td class="required">是</td>
+                    <td>123456789012345678</td>
+                </tr>
+                <tr>
+                    <td class="required">证书编号</td>
+                    <td>证书的唯一编号</td>
+                    <td class="required">是</td>
+                    <td>CERT2024001</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>正确的Excel文件格式示例</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>证件类型</th>
+                    <th>证件号</th>
+                    <th>证书编号</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="example-row">
+                    <td>张三</td>
+                    <td>男</td>
+                    <td>身份证</td>
+                    <td>110101199001011234</td>
+                    <td>CERT2024001</td>
+                </tr>
+                <tr class="example-row">
+                    <td>李四</td>
+                    <td>女</td>
+                    <td>身份证</td>
+                    <td>110101199002022345</td>
+                    <td>CERT2024002</td>
+                </tr>
+                <tr class="example-row">
+                    <td>王五</td>
+                    <td>男</td>
+                    <td>护照</td>
+                    <td>E12345678</td>
+                    <td>CERT2024003</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box">
+            <strong>注意事项：</strong>
+            <ul style="margin: 10px 0 0 20px;">
+                <li>第一行必须是列标题</li>
+                <li>所有必需字段都不能为空</li>
+                <li>支持的文件格式：.xlsx 和 .xls</li>
+                <li>建议使用UTF-8编码保存文件</li>
+                <li>证件号和证书编号的组合必须唯一</li>
+            </ul>
+        </div>
+
+        <h2>常见错误及解决方法</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>错误类型</th>
+                    <th>可能原因</th>
+                    <th>解决方法</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>文件格式不支持</td>
+                    <td>上传了非Excel文件</td>
+                    <td>请确保文件是.xlsx或.xls格式</td>
+                </tr>
+                <tr>
+                    <td>缺少必需的列</td>
+                    <td>Excel文件列名不正确</td>
+                    <td>请确保第一行包含：姓名、性别、证件类型、证件号、证书编号</td>
+                </tr>
+                <tr>
+                    <td>数据为空</td>
+                    <td>某些行的必需字段为空</td>
+                    <td>请检查并填写所有必需字段</td>
+                </tr>
+                <tr>
+                    <td>文件读取失败</td>
+                    <td>文件损坏或格式错误</td>
+                    <td>请重新保存Excel文件或使用新的文件</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="http://localhost:3001" class="back-button">返回主页面</a>
+    </div>
+</body>
+</html>
