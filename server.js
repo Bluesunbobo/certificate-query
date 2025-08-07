@@ -15,17 +15,23 @@ const DB_TYPE = process.env.DB_TYPE || 'postgres'; // 默认使用postgres，可
 
 // 数据库配置
 const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432, // PostgreSQL默认端口
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'cert_db',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
 };
 
 // 打印数据库连接信息（不包含密码）
 console.log(`数据库类型: ${DB_TYPE}`);
 console.log(`数据库连接配置: ${dbConfig.host}:${dbConfig.port}, 用户: ${dbConfig.user}, 数据库: ${dbConfig.database}`);
+
+// 检查必要的环境变量
+if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD) {
+    console.warn('⚠️  警告: 数据库环境变量未完全设置，将使用默认配置或跳过数据库初始化');
+    console.warn('请确保设置了以下环境变量: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT');
+}
 
 // 创建数据库连接池
 let pool;
@@ -499,9 +505,54 @@ app.get('/api/cleanup', async (req, res) => {
     
     try {
         await cleanupOldData();
+        cleanupOldFiles(); // 添加文件清理
         res.json({ success: true, message: '清理操作已执行' });
     } catch (error) {
         res.status(500).json({ success: false, message: '清理操作失败: ' + error.message });
+    }
+});
+
+// 添加文件清理状态查询API
+app.get('/api/file-status', async (req, res) => {
+    // 检查管理员密码
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const providedPassword = req.query.password;
+    
+    if (!adminPassword || providedPassword !== adminPassword) {
+        return res.status(403).json({ success: false, message: '未授权访问' });
+    }
+    
+    try {
+        const fileStatus = {
+            uploadDir: uploadDir,
+            exists: fs.existsSync(uploadDir),
+            files: []
+        };
+        
+        if (fileStatus.exists) {
+            const files = fs.readdirSync(uploadDir);
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            
+            fileStatus.files = files.map(file => {
+                const filePath = path.join(uploadDir, file);
+                const stats = fs.statSync(filePath);
+                const fileAge = new Date() - stats.mtime;
+                const daysOld = Math.floor(fileAge / (24 * 60 * 60 * 1000));
+                
+                return {
+                    name: file,
+                    size: stats.size,
+                    created: stats.mtime,
+                    daysOld: daysOld,
+                    willBeDeleted: daysOld >= 7
+                };
+            });
+        }
+        
+        res.json({ success: true, data: fileStatus });
+    } catch (error) {
+        res.status(500).json({ success: false, message: '获取文件状态失败: ' + error.message });
     }
 });
 
@@ -601,6 +652,51 @@ async function cleanupOldData() {
     }
 }
 
+// 添加文件清理功能
+function cleanupOldFiles() {
+    try {
+        console.log('开始清理过期文件...');
+        
+        // 计算7天前的日期
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        // 检查上传目录是否存在
+        if (!fs.existsSync(uploadDir)) {
+            console.log('上传目录不存在，跳过文件清理');
+            return;
+        }
+        
+        // 读取上传目录中的所有文件
+        const files = fs.readdirSync(uploadDir);
+        let deletedCount = 0;
+        
+        files.forEach(file => {
+            const filePath = path.join(uploadDir, file);
+            
+            try {
+                // 获取文件状态
+                const stats = fs.statSync(filePath);
+                const fileAge = new Date() - stats.mtime;
+                const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000; // 7天的毫秒数
+                
+                // 如果文件超过7天，删除它
+                if (fileAge > sevenDaysInMs) {
+                    fs.unlinkSync(filePath);
+                    deletedCount++;
+                    console.log(`删除过期文件: ${file}`);
+                }
+            } catch (error) {
+                console.error(`处理文件 ${file} 时出错:`, error.message);
+            }
+        });
+        
+        console.log(`文件清理完成: 删除了 ${deletedCount} 个过期文件`);
+    } catch (error) {
+        console.error('文件清理过程中出错:', error);
+    }
+}
+
 // 设置定期清理任务(每天检查一次)
 const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24小时
 let cleanupTimer = null;
@@ -613,11 +709,12 @@ function scheduleCleanupTask() {
     
     // 设置新的定时器
     cleanupTimer = setInterval(() => {
-        console.log('执行定期数据清理...');
-        cleanupOldData();
+        console.log('执行定期清理任务...');
+        cleanupOldData(); // 清理数据库旧数据
+        cleanupOldFiles(); // 清理过期文件
     }, CLEANUP_INTERVAL);
     
-    console.log('数据清理任务已设置，间隔:', CLEANUP_INTERVAL, 'ms');
+    console.log('定期清理任务已设置，间隔:', CLEANUP_INTERVAL, 'ms');
 }
 
 // 添加一个广告回调处理接口
@@ -648,9 +745,16 @@ const server = app.listen(PORT, () => {
     console.log(`服务器已启动，请在浏览器中访问: http://localhost:${PORT}`);
     
     // 如果启用自动清理，初始化清理任务
-    if (process.env.ENABLE_AUTO_CLEANUP === 'true') {
-        console.log('启用自动数据清理');
+    if (process.env.ENABLE_AUTO_CLEANUP !== 'false') {
+        console.log('启用自动数据清理和文件清理');
         scheduleCleanupTask();
+        
+        // 立即执行一次清理任务
+        console.log('执行初始清理任务...');
+        cleanupOldData();
+        cleanupOldFiles();
+    } else {
+        console.log('自动清理功能已禁用');
     }
 });
 
